@@ -1,7 +1,6 @@
 import User from './domain/User';
 import UserRepository from './data/UserRepository';
 import UoW from '../src/UnitOfWork';
-import requestContext from 'request-context';
 import {assert} from 'chai';
 
 describe('unit of work', () => {

@@ -1,6 +1,6 @@
 {
   "name": "ddd-helpers",
-  "version": "1.0.0",
+  "version": "0.0.2",
   "description": "Useful utilities for DDD apps",
   "main": "dist/index.js",
   "scripts": {
@@ -8,9 +8,12 @@
     "compile": "rm -rf dist/ && babel -d dist/ src/",
     "build": "npm run compile"
   },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/InterAl/ddd-helpers.git"
+  },
   "files": [
-    "index.js",
-    "src"
+    "dist"
   ],
   "keywords": [
     "ddd",
@@ -27,6 +30,5 @@
     "babel-preset-stage-2": "^6.18.0"
   },
   "dependencies": {
-    "request-context": "^2.0.0"
   }
 }
