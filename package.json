@@ -13,7 +13,7 @@
     "url": "https://github.com/InterAl/ddd-helpers.git"
   },
   "files": [
-    "dist"
+    "dist/"
   ],
   "keywords": [
     "ddd",
