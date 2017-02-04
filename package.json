@@ -1,6 +1,6 @@
 {
   "name": "ddd-helpers",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "description": "Useful utilities for DDD apps",
   "main": "dist/index.js",
   "scripts": {
@@ -29,6 +29,5 @@
     "babel-preset-react": "^6.16.0",
     "babel-preset-stage-2": "^6.18.0"
   },
-  "dependencies": {
-  }
+  "dependencies": {}
 }
