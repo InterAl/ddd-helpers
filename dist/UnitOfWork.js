@@ -12,9 +12,13 @@ exports.default = function (createTransaction, getEntityRepository) {
 
         return {
             trackEntity: function trackEntity(entity) {
+                var _ref = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {},
+                    _ref$isNew = _ref.isNew,
+                    isNew = _ref$isNew === undefined ? false : _ref$isNew;
+
                 var repository = getEntityRepository(entity);
                 var originalDbEntity = repository.toDbEntity(entity);
-                entityMap.set(entity, { originalDbEntity: originalDbEntity, repository: repository });
+                entityMap.set(entity, { isNew: isNew, originalDbEntity: originalDbEntity, repository: repository });
             },
             commit: function commit() {
                 var entries = getDirtyEntries(entityMap);
@@ -50,11 +54,12 @@ function getDirtyEntries(map) {
             var _step$value = _slicedToArray(_step.value, 2),
                 entity = _step$value[0],
                 _step$value$ = _step$value[1],
+                isNew = _step$value$.isNew,
                 originalDbEntity = _step$value$.originalDbEntity,
                 repository = _step$value$.repository;
 
             var currentDbEntity = repository.toDbEntity(entity);
-            var dirty = isDirty(currentDbEntity, originalDbEntity);
+            var dirty = isNew || isDirty(currentDbEntity, originalDbEntity);
 
             if (dirty) {
                 entries.push({ entity: entity, repository: repository, dbEntity: currentDbEntity });
