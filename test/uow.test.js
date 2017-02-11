@@ -48,5 +48,22 @@ describe('unit of work', () => {
            })
            .then(() => done())
            .catch(done);
-    })
+    });
+
+    it('new entities are saved, even if not mutated after tracking', done => {
+        let user = new User({id: '1', name: 'gg', email: 'gg@gmail.com'});
+
+        uow.trackEntity(user, {isNew: true});
+
+        uow.commit()
+           .then(() => {
+               assert.deepEqual(userRepository.database.saved, [{
+                   id: '1',
+                   name: 'gg',
+                   email: 'gg@gmail.com'
+               }]);
+           })
+           .then(() => done())
+           .catch(done);
+    });
 });

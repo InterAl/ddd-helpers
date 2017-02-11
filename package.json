@@ -5,6 +5,7 @@
   "main": "dist/index.js",
   "scripts": {
     "test": "mocha --require test/setup test/**/*.test.js",
+    "test:watch": "mocha --watch --require test/setup test/**/*.test.js",
     "compile": "rm -rf dist/ && babel -d dist/ src/",
     "build": "npm run compile"
   },

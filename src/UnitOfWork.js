@@ -2,10 +2,10 @@ export default (createTransaction, getEntityRepository) => () => {
     const entityMap = new Map();
 
     return {
-        trackEntity(entity) {
+        trackEntity(entity, {isNew = false} = {}) {
             const repository = getEntityRepository(entity);
             const originalDbEntity = repository.toDbEntity(entity);
-            entityMap.set(entity, {originalDbEntity, repository});
+            entityMap.set(entity, {isNew, originalDbEntity, repository});
         },
 
         commit() {
@@ -31,9 +31,9 @@ export default (createTransaction, getEntityRepository) => () => {
 function getDirtyEntries(map) {
     const entries = [];
 
-    for (let [entity, {originalDbEntity, repository}] of map.entries()) {
+    for (let [entity, {isNew, originalDbEntity, repository}] of map.entries()) {
         const currentDbEntity = repository.toDbEntity(entity);
-        const dirty = isDirty(currentDbEntity, originalDbEntity);
+        const dirty = isNew || isDirty(currentDbEntity, originalDbEntity);
 
         if (dirty) {
             entries.push({entity, repository, dbEntity: currentDbEntity});
