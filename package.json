@@ -1,6 +1,6 @@
 {
   "name": "ddd-helpers",
-  "version": "0.0.3",
+  "version": "0.0.4",
   "description": "Useful utilities for DDD apps",
   "main": "dist/index.js",
   "scripts": {
