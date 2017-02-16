@@ -1,5 +1,6 @@
 //Why underscore? Because its isEqual call is the fastest.
-import _ from 'underscore';
+import underscore from 'underscore';
+import _ from 'lodash';
 
 export default (createTransaction, getEntityRepository) => () => {
     const entityMap = new Map();
@@ -7,7 +8,7 @@ export default (createTransaction, getEntityRepository) => () => {
     return {
         trackEntity(entity, {isNew = false} = {}) {
             const repository = getEntityRepository(entity);
-            const originalDbEntity = clone(repository.toDbEntity(entity));
+            const originalDbEntity = _.cloneDeep(repository.toDbEntity(entity));
             entityMap.set(entity, {isNew, originalDbEntity, repository});
         },
 
@@ -47,9 +48,5 @@ function getDirtyEntries(map) {
 }
 
 function isDirty(newObj, oldObj) {
-    return !_.isEqual(newObj, oldObj);
-}
-
-function clone(obj) {
-    return JSON.parse(JSON.stringify(obj));
+    return !underscore.isEqual(newObj, oldObj);
 }

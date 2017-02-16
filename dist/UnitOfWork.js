@@ -4,7 +4,18 @@ Object.defineProperty(exports, "__esModule", {
     value: true
 });
 
-var _slicedToArray = function () { function sliceIterator(arr, i) { var _arr = []; var _n = true; var _d = false; var _e = undefined; try { for (var _i = arr[Symbol.iterator](), _s; !(_n = (_s = _i.next()).done); _n = true) { _arr.push(_s.value); if (i && _arr.length === i) break; } } catch (err) { _d = true; _e = err; } finally { try { if (!_n && _i["return"]) _i["return"](); } finally { if (_d) throw _e; } } return _arr; } return function (arr, i) { if (Array.isArray(arr)) { return arr; } else if (Symbol.iterator in Object(arr)) { return sliceIterator(arr, i); } else { throw new TypeError("Invalid attempt to destructure non-iterable instance"); } }; }();
+var _slicedToArray = function () { function sliceIterator(arr, i) { var _arr = []; var _n = true; var _d = false; var _e = undefined; try { for (var _i = arr[Symbol.iterator](), _s; !(_n = (_s = _i.next()).done); _n = true) { _arr.push(_s.value); if (i && _arr.length === i) break; } } catch (err) { _d = true; _e = err; } finally { try { if (!_n && _i["return"]) _i["return"](); } finally { if (_d) throw _e; } } return _arr; } return function (arr, i) { if (Array.isArray(arr)) { return arr; } else if (Symbol.iterator in Object(arr)) { return sliceIterator(arr, i); } else { throw new TypeError("Invalid attempt to destructure non-iterable instance"); } }; }(); //Why underscore? Because its isEqual call is the fastest.
+
+
+var _underscore = require('underscore');
+
+var _underscore2 = _interopRequireDefault(_underscore);
+
+var _lodash = require('lodash');
+
+var _lodash2 = _interopRequireDefault(_lodash);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 exports.default = function (createTransaction, getEntityRepository) {
     return function () {
@@ -17,7 +28,7 @@ exports.default = function (createTransaction, getEntityRepository) {
                     isNew = _ref$isNew === undefined ? false : _ref$isNew;
 
                 var repository = getEntityRepository(entity);
-                var originalDbEntity = repository.toDbEntity(entity);
+                var originalDbEntity = _lodash2.default.cloneDeep(repository.toDbEntity(entity));
                 entityMap.set(entity, { isNew: isNew, originalDbEntity: originalDbEntity, repository: repository });
             },
             commit: function commit() {
@@ -26,7 +37,7 @@ exports.default = function (createTransaction, getEntityRepository) {
                 if (entries.length > 0) {
                     return createTransaction().then(function (transaction) {
                         return Promise.all(entries.map(function (entry) {
-                            return entry.repository.save(entry.dbEntity, transaction);
+                            return entry.repository.save(entry.dbEntity, transaction, entry.originalDbEntity);
                         })).then(function () {
                             return transaction.commit();
                         }).catch(function (err) {
@@ -62,7 +73,7 @@ function getDirtyEntries(map) {
             var dirty = isNew || isDirty(currentDbEntity, originalDbEntity);
 
             if (dirty) {
-                entries.push({ entity: entity, repository: repository, dbEntity: currentDbEntity });
+                entries.push({ entity: entity, repository: repository, dbEntity: currentDbEntity, originalDbEntity: originalDbEntity });
             }
         }
     } catch (err) {
@@ -84,5 +95,5 @@ function getDirtyEntries(map) {
 }
 
 function isDirty(newObj, oldObj) {
-    return JSON.stringify(newObj) !== JSON.stringify(oldObj);
+    return !_underscore2.default.isEqual(newObj, oldObj);
 }
