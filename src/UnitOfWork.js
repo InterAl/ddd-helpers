@@ -1,10 +1,13 @@
+//Why underscore? Because its isEqual call is the fastest.
+import _ from 'underscore';
+
 export default (createTransaction, getEntityRepository) => () => {
     const entityMap = new Map();
 
     return {
         trackEntity(entity, {isNew = false} = {}) {
             const repository = getEntityRepository(entity);
-            const originalDbEntity = repository.toDbEntity(entity);
+            const originalDbEntity = clone(repository.toDbEntity(entity));
             entityMap.set(entity, {isNew, originalDbEntity, repository});
         },
 
@@ -14,7 +17,7 @@ export default (createTransaction, getEntityRepository) => () => {
             if (entries.length > 0) {
                 return createTransaction().then(transaction => {
                     return Promise
-                        .all(entries.map(entry => entry.repository.save(entry.dbEntity, transaction)))
+                        .all(entries.map(entry => entry.repository.save(entry.dbEntity, transaction, entry.originalDbEntity)))
                         .then(() => transaction.commit())
                         .catch(err => {
                             console.error('transaction failed', err);
@@ -36,7 +39,7 @@ function getDirtyEntries(map) {
         const dirty = isNew || isDirty(currentDbEntity, originalDbEntity);
 
         if (dirty) {
-            entries.push({entity, repository, dbEntity: currentDbEntity});
+            entries.push({entity, repository, dbEntity: currentDbEntity, originalDbEntity});
         }
     }
 
@@ -44,5 +47,9 @@ function getDirtyEntries(map) {
 }
 
 function isDirty(newObj, oldObj) {
-    return JSON.stringify(newObj) !== JSON.stringify(oldObj);
+    return !_.isEqual(newObj, oldObj);
+}
+
+function clone(obj) {
+    return JSON.parse(JSON.stringify(obj));
 }

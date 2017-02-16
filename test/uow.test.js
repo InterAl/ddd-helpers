@@ -2,6 +2,7 @@ import User from './domain/User';
 import UserRepository from './data/UserRepository';
 import UoW from '../src/UnitOfWork';
 import {assert} from 'chai';
+import sinon from 'sinon';
 
 describe('unit of work', () => {
     let userRepository, uow;
@@ -64,6 +65,34 @@ describe('unit of work', () => {
                }]);
            })
            .then(() => done())
+           .catch(done);
+    });
+
+    it('pass both the new & old dbEntities to repo.save', done => {
+        const repo = {
+            toDbEntity(e) {
+                return e;
+            },
+            save: sinon.spy()
+        };
+
+        const uow = UoW(createTransaction, () => repo)();
+
+        const entity = {foo: 'bar'};
+
+        uow.trackEntity(entity);
+
+        entity.foo = 'baz';
+
+        uow.commit()
+           .then(() => {
+               const [arg1, arg2, arg3] = repo.save.getCall(0).args;
+
+               assert.deepEqual(arg1, { foo: 'baz' });
+               assert.deepEqual(arg3, { foo: 'bar' });
+
+               done();
+           })
            .catch(done);
     });
 });
