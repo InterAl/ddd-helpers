@@ -37,7 +37,7 @@ exports.default = function (createTransaction, getEntityRepository) {
                 if (entries.length > 0) {
                     return createTransaction().then(function (transaction) {
                         return Promise.all(entries.map(function (entry) {
-                            return entry.repository.save(entry.dbEntity, transaction, entry.originalDbEntity);
+                            return entry.repository.save(entry.dbEntity, transaction, !entry.isNew ? entry.originalDbEntity : undefined);
                         })).then(function () {
                             return transaction.commit();
                         }).catch(function (err) {
@@ -73,7 +73,7 @@ function getDirtyEntries(map) {
             var dirty = isNew || isDirty(currentDbEntity, originalDbEntity);
 
             if (dirty) {
-                entries.push({ entity: entity, repository: repository, dbEntity: currentDbEntity, originalDbEntity: originalDbEntity });
+                entries.push({ entity: entity, repository: repository, dbEntity: currentDbEntity, originalDbEntity: originalDbEntity, isNew: isNew });
             }
         }
     } catch (err) {
