@@ -95,4 +95,34 @@ describe('unit of work', () => {
            })
            .catch(done);
     });
+
+    it('don\'t pass the old dbEntity if trackEntity was called with isNew=true', done => {
+        const repo = {
+            toDbEntity(e) {
+                return e;
+            },
+            save: sinon.spy()
+        };
+
+        const uow = UoW(createTransaction, () => repo)();
+
+        const entity = {foo: 'bar'};
+
+        uow.trackEntity(entity, {
+            isNew: true
+        });
+
+        entity.foo = 'baz';
+
+        uow.commit()
+           .then(() => {
+               const [arg1, arg2, arg3] = repo.save.getCall(0).args;
+
+               assert.deepEqual(arg1, { foo: 'baz' });
+               assert.equal(arg3, undefined);
+
+               done();
+           })
+           .catch(done);
+    });
 });

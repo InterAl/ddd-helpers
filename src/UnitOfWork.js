@@ -18,12 +18,17 @@ export default (createTransaction, getEntityRepository) => () => {
             if (entries.length > 0) {
                 return createTransaction().then(transaction => {
                     return Promise
-                        .all(entries.map(entry => entry.repository.save(entry.dbEntity, transaction, entry.originalDbEntity)))
-                        .then(() => transaction.commit())
-                        .catch(err => {
-                            console.error('transaction failed', err);
-                            return transaction.rollback();
-                        })
+                    .all(entries.map(entry => {
+                        return entry.repository.save(
+                            entry.dbEntity,
+                            transaction,
+                            !entry.isNew ? entry.originalDbEntity : undefined)
+                    }))
+                    .then(() => transaction.commit())
+                    .catch(err => {
+                        console.error('transaction failed', err);
+                        return transaction.rollback();
+                    })
                 });
             } else {
                 return Promise.resolve();
@@ -40,7 +45,7 @@ function getDirtyEntries(map) {
         const dirty = isNew || isDirty(currentDbEntity, originalDbEntity);
 
         if (dirty) {
-            entries.push({entity, repository, dbEntity: currentDbEntity, originalDbEntity});
+            entries.push({entity, repository, dbEntity: currentDbEntity, originalDbEntity, isNew});
         }
     }
 
