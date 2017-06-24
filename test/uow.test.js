@@ -5,7 +5,7 @@ import {assert} from 'chai';
 import sinon from 'sinon';
 
 describe('unit of work', () => {
-    let userRepository, uow;
+    let userRepository, uow, rollback;
 
     function createTransaction() {
         return Promise.resolve({
@@ -14,11 +14,22 @@ describe('unit of work', () => {
         });
     }
 
+    function createFailedTransaction() {
+        return Promise.resolve({
+            commit: () => {throw 'Failed transaction';},
+            rollback: () => {
+                rollback();
+                return Promise.resolve();
+            }
+        });
+    }
+
     function getEntityRepository(entity) {
         return userRepository;
     }
 
     beforeEach(() => {
+        rollback = sinon.spy();
         uow = UoW(createTransaction, getEntityRepository)();
         userRepository = new UserRepository(() => uow);
     });
@@ -124,5 +135,28 @@ describe('unit of work', () => {
                done();
            })
            .catch(done);
+    });
+
+    it('failed transaction should throw an error', done => {
+        uow = UoW(createFailedTransaction, getEntityRepository)();
+        userRepository = new UserRepository(() => uow);
+
+        uow.trackEntity({foo: 'bar'}, {isNew: true});
+
+        uow.commit().then(() => {
+            done('should have thrown');
+        }).catch(() => done());
+    });
+
+    it('failed transaction should call the rollback function', done => {
+        uow = UoW(createFailedTransaction, getEntityRepository)();
+        userRepository = new UserRepository(() => uow);
+
+        uow.trackEntity({foo: 'bar'}, {isNew: true});
+
+        uow.commit().then(() => done('should have thrown')).catch((r, e) => {
+            sinon.assert.called(rollback);
+            done();
+        });
     });
 });

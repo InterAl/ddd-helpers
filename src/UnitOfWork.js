@@ -26,8 +26,9 @@ export default (createTransaction, getEntityRepository) => () => {
                     }))
                     .then(() => transaction.commit())
                     .catch(err => {
-                        console.error('transaction failed', err);
-                        return transaction.rollback();
+                        return transaction.rollback().then(() => {
+                            throw err;
+                        });
                     })
                 });
             } else {
