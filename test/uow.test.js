@@ -34,52 +34,60 @@ describe('unit of work', () => {
         userRepository = new UserRepository(() => uow);
     });
 
-    it('change and save entity', done => {
+    it('change and save entity', () => {
         let user = userRepository.findById(42);
         user.updateName('Alon');
         user.updateEmail('alon@gmail.com');
 
-        uow.commit()
+        return uow.commit()
            .then(() => {
                assert.deepEqual(userRepository.database.saved[0], {
                    id: 42,
                    name: 'Alon',
                    email: 'alon@gmail.com'
                });
-           })
-           .then(() => done())
-           .catch(done)
+           });
     });
 
-    it('unchanged entities are not saved', done => {
+    it('unchanged entities are not saved', () => {
         let user = userRepository.findById(42);
 
-        uow.commit()
+        return uow.commit()
            .then(() => {
                assert.deepEqual(userRepository.database.saved, [])
-           })
-           .then(() => done())
-           .catch(done);
+           });
     });
 
-    it('new entities are saved, even if not mutated after tracking', done => {
+    it('committed entities are not saved again if not changed', () => {
+        let user = userRepository.findById(42);
+
+        user.email = 'changed@gmail.com';
+
+        return uow.commit()
+        .then(() => {
+            return uow.commit();
+        })
+        .then(() => {
+            assert.equal(userRepository.database.saved.length, 1);
+        });
+    });
+
+    it('new entities are saved, even if not mutated after tracking', () => {
         let user = new User({id: '1', name: 'gg', email: 'gg@gmail.com'});
 
         uow.trackEntity(user, {isNew: true});
 
-        uow.commit()
+        return uow.commit()
            .then(() => {
                assert.deepEqual(userRepository.database.saved, [{
                    id: '1',
                    name: 'gg',
                    email: 'gg@gmail.com'
                }]);
-           })
-           .then(() => done())
-           .catch(done);
+           });
     });
 
-    it('pass both the new & old dbEntities to repo.save', done => {
+    it('pass both the new & old dbEntities to repo.save', () => {
         const repo = {
             toDbEntity(e) {
                 return e;
@@ -95,19 +103,16 @@ describe('unit of work', () => {
 
         entity.foo = 'baz';
 
-        uow.commit()
+        return uow.commit()
            .then(() => {
                const [arg1, arg2, arg3] = repo.save.getCall(0).args;
 
                assert.deepEqual(arg1, { foo: 'baz' });
                assert.deepEqual(arg3, { foo: 'bar' });
-
-               done();
-           })
-           .catch(done);
+           });
     });
 
-    it('don\'t pass the old dbEntity if trackEntity was called with isNew=true', done => {
+    it('don\'t pass the old dbEntity if trackEntity was called with isNew=true', () => {
         const repo = {
             toDbEntity(e) {
                 return e;
@@ -125,16 +130,13 @@ describe('unit of work', () => {
 
         entity.foo = 'baz';
 
-        uow.commit()
+        return uow.commit()
            .then(() => {
                const [arg1, arg2, arg3] = repo.save.getCall(0).args;
 
                assert.deepEqual(arg1, { foo: 'baz' });
                assert.equal(arg3, undefined);
-
-               done();
-           })
-           .catch(done);
+           });
     });
 
     it('failed transaction should throw an error', done => {

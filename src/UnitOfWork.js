@@ -3,7 +3,13 @@ import underscore from 'underscore';
 import _ from 'lodash';
 
 export default (createTransaction, getEntityRepository) => () => {
-    const entityMap = new Map();
+    let entityMap;
+
+    function initMap() {
+        entityMap = new Map();
+    }
+
+    initMap();
 
     return {
         trackEntity(entity, {isNew = false} = {}) {
@@ -16,21 +22,25 @@ export default (createTransaction, getEntityRepository) => () => {
             const entries = getDirtyEntries(entityMap);
 
             if (entries.length > 0) {
-                return createTransaction().then(transaction => {
+                return createTransaction()
+                .then(transaction => {
                     return Promise
-                    .all(entries.map(entry => {
-                        return entry.repository.save(
-                            entry.dbEntity,
-                            transaction,
-                            !entry.isNew ? entry.originalDbEntity : undefined)
-                    }))
-                    .then(() => transaction.commit())
-                    .catch(err => {
-                        console.error('transaction failed', err);
-                        return transaction.rollback().then(() => {
-                            throw err;
-                        });
-                    })
+                        .all(entries.map(entry => {
+                            return entry.repository.save(
+                                entry.dbEntity,
+                                transaction,
+                                !entry.isNew ? entry.originalDbEntity : undefined)
+                        }))
+                        .then(() => transaction.commit())
+                        .catch(err => {
+                            console.error('transaction failed', err);
+                            return transaction.rollback().then(() => {
+                                throw err;
+                            });
+                        })
+                })
+                .then(() => {
+                    initMap();
                 });
             } else {
                 return Promise.resolve();
