@@ -41,6 +41,7 @@ exports.default = function (createTransaction, getEntityRepository) {
                         })).then(function () {
                             return transaction.commit();
                         }).catch(function (err) {
+                            console.error('transaction failed', err);
                             return transaction.rollback().then(function () {
                                 throw err;
                             });
